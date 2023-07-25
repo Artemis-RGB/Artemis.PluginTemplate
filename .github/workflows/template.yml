@@ -1,0 +1,51 @@
+name: Run the templating
+
+on: [push]
+
+jobs:
+  run-templating:
+    # Don't run this in the template repo or more than once in the forked repo. Check for the presence of the ".template" file 
+    if: ${{ github.repository != 'diogotr7/Artemis.PluginTemplate' && github.repository != 'Artemis-RGB/Artemis.PluginTemplate' && '[ -f .template ]' }}
+    runs-on: ubuntu-latest
+    permissions:
+      # Give the default GITHUB_TOKEN write permission to commit and push the
+      # added or changed files to the repository.
+      contents: write
+      actions: write
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # by default, it uses a depth of 1
+          # this fetches all history so that we can read each commit
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '7.0.x'
+
+      - name: Install Artemis templates
+        run: dotnet new install ArtemisRGB.Templates
+
+      - name: Setup repository
+        shell: pwsh
+        run: |
+          $pluginName = "${{ github.event.repository.name }}"
+
+          dotnet new artemis-plugin-empty -n $pluginName -o src/$pluginName
+
+          dotnet sln src/Artemis.Plugins.sln add src/$pluginName
+
+          rm .github/workflows/template.yml
+
+          rm .template
+
+          mv -f README2.md README.md
+
+      # Set github actions[bot] as the commiter
+      - run: |
+          git config --local user.name 'github-actions[bot]' && git config --local user.email 'github-actions[bot]@users.noreply.github.com'
+      # Reset git
+      - run: |
+          git update-ref -d HEAD && git add -A && git commit -m "init" && git push --force
