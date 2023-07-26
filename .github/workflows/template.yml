@@ -5,7 +5,7 @@ on: [push]
 jobs:
   run-templating:
     # Don't run this in the template repo or more than once in the forked repo. Check for the presence of the ".template" file 
-    if: ${{ github.repository != 'diogotr7/Artemis.PluginTemplate' && github.repository != 'Artemis-RGB/Artemis.PluginTemplate' && '[ -f .template ]' }}
+    if: ${{ github.repository != 'Artemis-RGB/Artemis.PluginTemplate' && '[ -f .template ]' }}
     runs-on: ubuntu-latest
     permissions:
       # Give the default GITHUB_TOKEN write permission to commit and push the
